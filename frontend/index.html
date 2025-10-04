@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IONOS Voice Assistant</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="12" fill="url(#gradient)" />
+                        <path d="M12 14v4l8-2-8-2z" fill="white" />
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#007AFF" />
+                                <stop offset="100%" style="stop-color:#5856D6" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1>IONOS Assistant</h1>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span class="status-text" id="statusText">Initializing...</span>
+            </div>
+            <div class="scenario-selector">
+                <label for="scenarioSelect">Practice Scenario:</label>
+                <select id="scenarioSelect">
+                    <option value="">Select a scenario...</option>
+                </select>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="voice-interface">
+                <div class="voice-visualizer">
+                    <div class="voice-circle" id="voiceCircle">
+                        <div class="voice-button" id="voiceButton">
+                            <svg class="mic-icon" id="micIcon" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                <path d="M24 30c3.314 0 6-2.686 6-6V12c0-3.314-2.686-6-6-6s-6 2.686-6 6v12c0 3.314 2.686 6 6 6z" fill="currentColor"/>
+                                <path d="M36 20v4c0 6.627-5.373 12-12 12s-12-5.373-12-12v-4" stroke="currentColor" stroke-width="2" fill="none"/>
+                                <path d="M24 36v6" stroke="currentColor" stroke-width="2"/>
+                                <path d="M18 42h12" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <svg class="stop-icon hidden" id="stopIcon" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                <rect x="16" y="16" width="16" height="16" rx="2" fill="currentColor"/>
+                            </svg>
+                            <div class="recording-pulse" id="recordingPulse"></div>
+                        </div>
+                    </div>
+                    <div class="voice-waves" id="voiceWaves">
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                    </div>
+                </div>
+
+                <div class="interaction-area">
+                    <div class="message-display" id="messageDisplay">
+                        <div class="welcome-message">
+                            <h2>Welcome to IONOS Voice Assistant</h2>
+                            <p>Click the microphone or type your message below.</p>
+                            <p><strong>Note:</strong> Audio transcription is simulated for now - use text input for best results.</p>
+                        </div>
+                    </div>
+
+                    <div class="text-input-area">
+                        <div class="input-container">
+                            <input type="text" id="textInput" placeholder="Type your message here..." />
+                            <button class="send-button" id="sendButton">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M18 2L9 11l-4-4-4 4 8 8L20 4z" stroke="currentColor" stroke-width="2" fill="none"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="control-button" id="clearButton" title="Clear conversation">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        <button class="control-button" id="evaluateButton" title="Get AI coaching evaluation">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <button class="control-button" id="settingsButton" title="Settings">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M10 1v2m0 14v2M4.22 4.22l1.42 1.42m9.9 9.9l1.42 1.42M1 10h2m14 0h2M4.22 15.78l1.42-1.42m9.9-9.9l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        <div class="volume-control">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 2.5v11L5.5 11H3V5h2.5L8 2.5zM10.5 5.5c.5.5.5 1.5 0 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M11.5 4c1 1 1 3 0 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            <input type="range" id="volumeSlider" min="0" max="100" value="80" class="volume-slider">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conversation-history" id="conversationHistory">
+                <div class="history-header">
+                    <h3>Conversation</h3>
+                </div>
+                <div class="history-content" id="historyContent">
+                </div>
+            </div>
+        </main>
+
+        <div class="settings-modal hidden" id="settingsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Settings</h3>
+                    <button class="close-button" id="closeSettings">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-group">
+                        <label for="keywordInput">Activation Keyword:</label>
+                        <input type="text" id="keywordInput" value="assistant" placeholder="Enter keyword">
+                    </div>
+                    <div class="setting-group">
+                        <label for="modelSelect">AI Model:</label>
+                        <select id="modelSelect">
+                            <option value="meta-llama/Meta-Llama-3.1-8B-Instruct">Llama 3.1 8B</option>
+                            <option value="meta-llama/Meta-Llama-3.1-405B-Instruct-FP8">Llama 3.1 405B</option>
+                            <option value="mistralai/Mistral-Nemo-Instruct-2407">Mistral Nemo</option>
+                            <option value="mistralai/Mixtral-8x7B-Instruct-v0.1">Mixtral 8x7B</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="continuousMode" />
+                            Continuous listening mode
+                        </label>
+                    </div>
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="keywordRequired" checked />
+                            Require activation keyword
+                        </label>
+                    </div>
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="useElevenLabsAgent" />
+                            Use ElevenLabs Agent (your custom agent)
+                        </label>
+                    </div>
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="useRealTimeVoice" />
+                            Real-Time Voice Mode (lowest latency)
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="save-button" id="saveSettings">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading-overlay hidden" id="loadingOverlay">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p id="loadingText">Processing...</p>
+            </div>
+        </div>
+
+        <div class="error-toast hidden" id="errorToast">
+            <div class="toast-content">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="2"/>
+                    <path d="M10 6v4M10 14h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span id="errorMessage">An error occurred</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="src/js/app.js"></script>
+</body>
+</html>
