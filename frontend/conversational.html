@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ElevenLabs Conversational AI - IONOS Assistant</title>
-    <link rel="stylesheet" href="/styles/conversational.css">
+    <link rel="stylesheet" href="/voice-assistant/styles/conversational.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -65,6 +65,49 @@
                 </div>
             </div>
         </main>
+
+        <!-- Transcript Panel -->
+        <div class="transcript-panel" id="transcriptPanel">
+            <div class="transcript-header">
+                <h3>Conversation Transcript</h3>
+                <div class="transcript-controls">
+                    <button class="transcript-btn clear-btn" id="clearTranscript" title="Clear transcript">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3,6 5,6 21,6"></polyline>
+                            <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                        </svg>
+                    </button>
+                    <button class="transcript-btn export-btn" id="exportTranscript" title="Export transcript">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </button>
+                    <button class="transcript-btn toggle-btn" id="toggleTranscript" title="Toggle transcript">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15,18 9,12 15,6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="transcript-content" id="transcriptContent">
+                <div class="transcript-placeholder">
+                    <p>Start a conversation to see the transcript here.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transcript Toggle Button (when panel is hidden) -->
+        <button class="transcript-toggle-fab" id="transcriptToggleFab" title="Show transcript">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14,2 14,8 20,8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10,9 9,9 8,9"></polyline>
+            </svg>
+        </button>
     </div>
 
     <!-- Loading Overlay -->
@@ -78,6 +121,6 @@
         <div class="error-message" id="errorMessage"></div>
     </div>
 
-    <script src="/bundle.js"></script>
+    <script src="/voice-assistant/bundle.js"></script>
 </body>
 </html>

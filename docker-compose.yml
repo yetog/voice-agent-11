@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  voice-assistant-backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: voice-assistant-backend
+    restart: unless-stopped
+    ports:
+      - "5007:5001"
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - HOST=0.0.0.0
+      # Add your API keys here or use .env file
+      - IONOS_API_TOKEN=${IONOS_API_TOKEN:-}
+      - ELEVEN_LABS_API_KEY=${ELEVEN_LABS_API_KEY:-}
+      - ELEVEN_LABS_VOICE_ID=${ELEVEN_LABS_VOICE_ID:-}
+      - ELEVEN_LABS_AGENT_ID=${ELEVEN_LABS_AGENT_ID:-}
+    volumes:
+      - voice-assistant-db:/app/data
+      - voice-assistant-audio:/app/audio
+    networks:
+      - voice-assistant-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http = require('http'); const options = { host: 'localhost', port: 5001, path: '/api/health', timeout: 2000 }; const req = http.request(options, (res) => { res.statusCode === 200 ? process.exit(0) : process.exit(1) }); req.on('error', () => process.exit(1)); req.end();"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  voice-assistant-frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: voice-assistant-frontend
+    restart: unless-stopped
+    ports:
+      - "3007:80"
+    depends_on:
+      - voice-assistant-backend
+    networks:
+      - voice-assistant-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  voice-assistant-db:
+    driver: local
+  voice-assistant-audio:
+    driver: local
+
+networks:
+  voice-assistant-network:
+    driver: bridge

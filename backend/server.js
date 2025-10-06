@@ -68,7 +68,12 @@ const SCENARIOS = {
 };
 
 // Database initialization
-const db = new Database('conversations.db');
+const dbPath = join(__dirname, 'data', 'conversations.db');
+// Ensure data directory exists
+if (!fs.existsSync(join(__dirname, 'data'))) {
+    fs.mkdirSync(join(__dirname, 'data'), { recursive: true });
+}
+const db = new Database(dbPath);
 
 // Create tables if they don't exist
 db.exec(`

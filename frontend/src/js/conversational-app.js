@@ -3,6 +3,8 @@ import { Conversation } from '@elevenlabs/client';
 
 let conversation = null;
 let isConnected = false;
+let transcript = [];
+let isTranscriptOpen = false;
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,6 +21,9 @@ function initializeApp() {
     if (endButton) {
         endButton.addEventListener('click', endConversation);
     }
+
+    // Initialize transcript functionality
+    initializeTranscript();
 
     // Update initial status
     updateStatus(false);
@@ -37,7 +42,7 @@ async function requestMicrophonePermission() {
 
 async function getSignedUrl() {
     try {
-        const response = await fetch('/api/signed-url');
+        const response = await fetch('/voice-assistant/api/signed-url');
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to get signed URL');
@@ -52,7 +57,7 @@ async function getSignedUrl() {
 
 async function getAgentId() {
     try {
-        const response = await fetch('/api/agent-id');
+        const response = await fetch('/voice-assistant/api/agent-id');
         const { agentId } = await response.json();
         return agentId;
     } catch (error) {
@@ -191,7 +196,7 @@ async function startConversation() {
 
             onMessage: (message) => {
                 console.log('Message received:', message);
-                // You can add transcript display here if needed
+                addToTranscript(message);
             }
         });
 
@@ -237,3 +242,134 @@ window.addEventListener('beforeunload', () => {
 window.addEventListener('error', function(event) {
     console.error('Global error:', event.error);
 });
+
+// Transcript functionality
+function initializeTranscript() {
+    const toggleTranscript = document.getElementById('toggleTranscript');
+    const transcriptToggleFab = document.getElementById('transcriptToggleFab');
+    const clearTranscript = document.getElementById('clearTranscript');
+    const exportTranscript = document.getElementById('exportTranscript');
+
+    if (toggleTranscript) {
+        toggleTranscript.addEventListener('click', () => toggleTranscriptPanel());
+    }
+    if (transcriptToggleFab) {
+        transcriptToggleFab.addEventListener('click', () => toggleTranscriptPanel());
+    }
+    if (clearTranscript) {
+        clearTranscript.addEventListener('click', () => clearTranscriptData());
+    }
+    if (exportTranscript) {
+        exportTranscript.addEventListener('click', () => exportTranscriptData());
+    }
+}
+
+function toggleTranscriptPanel() {
+    const panel = document.getElementById('transcriptPanel');
+    const fab = document.getElementById('transcriptToggleFab');
+    
+    if (panel) {
+        isTranscriptOpen = !isTranscriptOpen;
+        panel.classList.toggle('open', isTranscriptOpen);
+        if (fab) {
+            fab.classList.toggle('hidden', isTranscriptOpen);
+        }
+    }
+}
+
+function addToTranscript(message) {
+    // Add timestamp
+    const timestamp = new Date().toLocaleTimeString();
+    
+    // Determine message type and content
+    let messageData = {
+        timestamp,
+        type: 'assistant',
+        content: message.message || message.text || 'Agent responded'
+    };
+
+    // Handle different message types from ElevenLabs
+    if (message.type === 'user_transcript' || message.source === 'user') {
+        messageData.type = 'user';
+        messageData.content = message.user_transcript || message.transcript || message.content;
+    } else if (message.type === 'agent_response' || message.source === 'agent') {
+        messageData.type = 'assistant';
+        messageData.content = message.agent_response || message.message || message.content;
+    }
+
+    transcript.push(messageData);
+    updateTranscriptDisplay();
+}
+
+function updateTranscriptDisplay() {
+    const transcriptContent = document.getElementById('transcriptContent');
+    if (!transcriptContent) return;
+
+    // Remove placeholder if exists
+    const placeholder = transcriptContent.querySelector('.transcript-placeholder');
+    if (placeholder) {
+        placeholder.remove();
+    }
+
+    // Clear and rebuild
+    transcriptContent.innerHTML = '';
+
+    transcript.forEach(message => {
+        const messageElement = document.createElement('div');
+        messageElement.className = `transcript-message ${message.type}`;
+        
+        messageElement.innerHTML = `
+            <div class="transcript-message-header">
+                <span>${message.type === 'user' ? 'You' : 'Assistant'}</span>
+                <span>${message.timestamp}</span>
+            </div>
+            <div class="transcript-message-content">${message.content}</div>
+        `;
+        
+        transcriptContent.appendChild(messageElement);
+    });
+
+    // Auto-scroll to bottom
+    transcriptContent.scrollTop = transcriptContent.scrollHeight;
+}
+
+function clearTranscriptData() {
+    if (confirm('Are you sure you want to clear the transcript?')) {
+        transcript = [];
+        const transcriptContent = document.getElementById('transcriptContent');
+        if (transcriptContent) {
+            transcriptContent.innerHTML = `
+                <div class="transcript-placeholder">
+                    <p>Start a conversation to see the transcript here.</p>
+                </div>
+            `;
+        }
+    }
+}
+
+function exportTranscriptData() {
+    if (transcript.length === 0) {
+        alert('No transcript data to export.');
+        return;
+    }
+
+    // Create formatted text
+    let exportText = 'ElevenLabs Conversational AI Transcript\n';
+    exportText += '=====================================\n\n';
+    
+    transcript.forEach(message => {
+        exportText += `[${message.timestamp}] ${message.type === 'user' ? 'You' : 'Assistant'}:\n`;
+        exportText += `${message.content}\n\n`;
+    });
+
+    // Create and download file
+    const blob = new Blob([exportText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversation-transcript-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
