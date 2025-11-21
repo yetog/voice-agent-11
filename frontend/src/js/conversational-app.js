@@ -197,6 +197,24 @@ async function startConversation() {
             onMessage: (message) => {
                 console.log('Message received:', message);
                 addToTranscript(message);
+            },
+
+            onUserSpeech: (userInput) => {
+                console.log('User speech captured:', userInput);
+                addToTranscript({
+                    type: 'user',
+                    content: userInput.text || userInput.transcript || userInput,
+                    source: 'user'
+                });
+            },
+
+            onUserTranscript: (transcript) => {
+                console.log('User transcript captured:', transcript);
+                addToTranscript({
+                    type: 'user',
+                    content: transcript,
+                    source: 'user'
+                });
             }
         });
 
@@ -281,20 +299,51 @@ function addToTranscript(message) {
     // Add timestamp
     const timestamp = new Date().toLocaleTimeString();
     
-    // Determine message type and content
+    // Log the message for debugging
+    console.log('Adding to transcript:', message);
+    
+    // Determine message type and content with improved detection
     let messageData = {
         timestamp,
-        type: 'assistant',
-        content: message.message || message.text || 'Agent responded'
+        type: 'assistant', // default
+        content: message.message || message.text || message.content || 'Message received'
     };
 
-    // Handle different message types from ElevenLabs
-    if (message.type === 'user_transcript' || message.source === 'user') {
+    // Enhanced detection for user messages
+    if (
+        message.type === 'user_transcript' || 
+        message.type === 'user' ||
+        message.type === 'user_speech' ||
+        message.source === 'user' ||
+        message.role === 'user' ||
+        message.speaker === 'user' ||
+        message.from === 'user' ||
+        message.kind === 'user_speech' ||
+        message.kind === 'user_transcript' ||
+        (message.hasOwnProperty('user_transcript') && message.user_transcript) ||
+        (message.hasOwnProperty('transcript') && message.transcript && !message.agent_response) ||
+        (message.hasOwnProperty('user_message') && message.user_message) ||
+        // ElevenLabs specific message types
+        (message.hasOwnProperty('is_user') && message.is_user) ||
+        (message.hasOwnProperty('isUser') && message.isUser)
+    ) {
         messageData.type = 'user';
-        messageData.content = message.user_transcript || message.transcript || message.content;
-    } else if (message.type === 'agent_response' || message.source === 'agent') {
+        messageData.content = message.user_transcript || message.user_message || message.transcript || message.content || message.text || message.message || 'User spoke';
+    } 
+    // Enhanced detection for agent messages
+    else if (
+        message.type === 'agent_response' || 
+        message.type === 'agent' ||
+        message.type === 'assistant' ||
+        message.source === 'agent' ||
+        message.source === 'assistant' ||
+        message.role === 'assistant' ||
+        message.speaker === 'agent' ||
+        message.from === 'agent' ||
+        message.hasOwnProperty('agent_response')
+    ) {
         messageData.type = 'assistant';
-        messageData.content = message.agent_response || message.message || message.content;
+        messageData.content = message.agent_response || message.message || message.content || message.text || 'Agent responded';
     }
 
     transcript.push(messageData);
