@@ -14,12 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeApp() {
     const startButton = document.getElementById('startButton');
     const endButton = document.getElementById('endButton');
+    const voiceSelect = document.getElementById('voiceSelect');
 
     if (startButton) {
         startButton.addEventListener('click', startConversation);
     }
     if (endButton) {
         endButton.addEventListener('click', endConversation);
+    }
+    if (voiceSelect) {
+        voiceSelect.addEventListener('change', handleVoiceChange);
+        // Load current voice setting
+        loadVoices();
     }
 
     // Initialize transcript functionality
@@ -28,6 +34,78 @@ function initializeApp() {
     // Update initial status
     updateStatus(false);
     updateSpeakingStatus({ mode: 'listening' });
+}
+
+async function loadVoices() {
+    try {
+        const response = await fetch('/voice-assistant/api/voices');
+        const data = await response.json();
+        const voiceSelect = document.getElementById('voiceSelect');
+
+        if (voiceSelect && data.currentVoice) {
+            voiceSelect.value = data.currentVoice;
+        }
+        console.log('Voices loaded, current voice:', data.currentVoice);
+    } catch (error) {
+        console.error('Error loading voices:', error);
+    }
+}
+
+async function handleVoiceChange(event) {
+    const voiceKey = event.target.value;
+    try {
+        const response = await fetch(`/voice-assistant/api/voices/${voiceKey}`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            console.log(`Voice changed to: ${data.voice.name}`);
+            // Show a brief notification
+            showVoiceNotification(`Voice: ${data.voice.name}`);
+        }
+    } catch (error) {
+        console.error('Error changing voice:', error);
+    }
+}
+
+function showVoiceNotification(message) {
+    // Create a temporary notification
+    const notification = document.createElement('div');
+    notification.className = 'voice-notification';
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 122, 255, 0.9);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 1000;
+        animation: fadeInOut 2s ease-in-out;
+    `;
+
+    // Add animation keyframes if not exists
+    if (!document.getElementById('voice-notification-style')) {
+        const style = document.createElement('style');
+        style.id = 'voice-notification-style';
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+                20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 2000);
 }
 
 async function requestMicrophonePermission() {

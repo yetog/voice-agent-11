@@ -47,6 +47,66 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Available ElevenLabs voices
+const VOICES = {
+    "adam": {
+        id: "pNInz6obpgDQGcFmaJgB",
+        name: "Adam",
+        description: "Deep, warm male voice - great for narration",
+        gender: "male",
+        accent: "American"
+    },
+    "rachel": {
+        id: "21m00Tcm4TlvDq8ikWAM",
+        name: "Rachel",
+        description: "Calm, professional female voice",
+        gender: "female",
+        accent: "American"
+    },
+    "antoni": {
+        id: "ErXwobaYiN019PkySvjV",
+        name: "Antoni",
+        description: "Well-rounded, expressive male voice",
+        gender: "male",
+        accent: "American"
+    },
+    "bella": {
+        id: "EXAVITQu4vr4xnSDxMaL",
+        name: "Bella",
+        description: "Soft, young female voice",
+        gender: "female",
+        accent: "American"
+    },
+    "josh": {
+        id: "TxGEqnHWrfWFTfGW9XjX",
+        name: "Josh",
+        description: "Deep, young male voice",
+        gender: "male",
+        accent: "American"
+    },
+    "arnold": {
+        id: "VR6AewLTigWG4xSOukaG",
+        name: "Arnold",
+        description: "Crisp, authoritative male voice",
+        gender: "male",
+        accent: "American"
+    },
+    "elli": {
+        id: "MF3mGyEYCl7XYWbV9V6O",
+        name: "Elli",
+        description: "Young, clear female voice",
+        gender: "female",
+        accent: "American"
+    },
+    "sam": {
+        id: "yoZ06aMxZJJ28mfd3POQ",
+        name: "Sam",
+        description: "Raspy, dynamic male voice",
+        gender: "male",
+        accent: "American"
+    }
+};
+
 // Conversation scenarios for role-play practice
 const SCENARIOS = {
     "tough_customer": {
@@ -182,6 +242,21 @@ class ElevenLabsService {
         this.apiKey = process.env.ELEVEN_LABS_API_KEY;
         this.voiceId = process.env.ELEVEN_LABS_VOICE_ID;
         this.agentId = process.env.ELEVEN_LABS_AGENT_ID;
+        this.selectedVoice = 'adam'; // Default voice
+    }
+
+    setVoice(voiceKey) {
+        if (VOICES[voiceKey]) {
+            this.selectedVoice = voiceKey;
+            this.voiceId = VOICES[voiceKey].id;
+            console.log(`Voice changed to: ${VOICES[voiceKey].name}`);
+            return true;
+        }
+        return false;
+    }
+
+    getVoiceId() {
+        return VOICES[this.selectedVoice]?.id || this.voiceId;
     }
 
     async conversationWithAgent(message, conversationId = null) {
@@ -405,13 +480,13 @@ class ElevenLabsService {
         }
     }
 
-    async generateSpeech(text) {
+    async generateSpeech(text, customVoiceId = null) {
         try {
             const fileName = `${Date.now()}.mp3`;
             const filePath = join(__dirname, 'audio', fileName);
 
-            // Use a default voice ID if not set
-            const voiceId = this.voiceId || 'pNInz6obpgDQGcFmaJgB'; // Default ElevenLabs voice
+            // Use custom voice, selected voice, or default
+            const voiceId = customVoiceId || this.getVoiceId() || 'pNInz6obpgDQGcFmaJgB';
 
             console.log(`Generating TTS for: "${text.substring(0, 50)}..." with voice: ${voiceId}`);
 
@@ -653,6 +728,41 @@ app.get('/api/scenarios', (req, res) => {
         res.json(SCENARIOS);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch scenarios', details: error.message });
+    }
+});
+
+// Get available voices
+app.get('/api/voices', (req, res) => {
+    try {
+        const voiceList = Object.entries(VOICES).map(([key, voice]) => ({
+            key,
+            ...voice,
+            selected: key === elevenLabs.selectedVoice
+        }));
+        res.json({
+            voices: voiceList,
+            currentVoice: elevenLabs.selectedVoice
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch voices', details: error.message });
+    }
+});
+
+// Set active voice
+app.post('/api/voices/:voiceKey', (req, res) => {
+    try {
+        const { voiceKey } = req.params;
+        if (elevenLabs.setVoice(voiceKey)) {
+            res.json({
+                success: true,
+                voice: VOICES[voiceKey],
+                message: `Voice changed to ${VOICES[voiceKey].name}`
+            });
+        } else {
+            res.status(400).json({ error: 'Invalid voice key' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to set voice', details: error.message });
     }
 });
 
